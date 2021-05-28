@@ -79,20 +79,25 @@ export default function Map() {
 	return (
 		<View style={styles.container}>
 			{loading ?
-				<Text>LOADING</Text> : <View>
-				<Text> {console.log(mapData)} DATA!!!!</Text>
-
-
+				<Text>LOADING MAP...</Text> : <View>
+					{console.log('mapData ===', mapData)}
 
 					<MapView
 							initialRegion={{
 								// latitude: 48.469065,
 								// longitude: 38.797475,
+
+								// TEMPORARY set init REGION to Toronto
 								latitude: 43.684345,
 								longitude: -79.431292,
-								latitudeDelta: 0.0922,
-								longitudeDelta: 0.0421,
-							}}
+
+								// latitudeDelta: 0.0922 * 5,
+								// longitudeDelta: 0.0421 * 5,
+
+								// some kind of zoom
+								latitudeDelta: 5,
+								longitudeDelta: 5,
+							}} maxZoomLevel={15}
 							onPress={mapPress} onPoiClick={mapClick} style={styles.map} >
 
 						{mapData.map((marker, index) => (
@@ -100,7 +105,8 @@ export default function Map() {
 								key={index}
 								coordinate={{latitude: marker.attributes.field_location.lat, longitude: marker.attributes.field_location.lng}}
 								title={marker.attributes.title}
-								description='Some descr'
+					      description={marker.attributes.body ? marker.attributes.body.value.substring(0, 30) : ''}
+							// .attributes.body.value
 								onPress={pressMarker}
 							/>
 						))}

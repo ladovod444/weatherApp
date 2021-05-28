@@ -74,6 +74,10 @@ export default function Weather({temp, condition}) {
 
 	// {condition = 'Mist'}
 
+	// return <>
+	// 	{console.log('w cond=', weatherOptions[condition])}
+	// </>
+
 	return <LinearGradient // Button Linear Gradient
 			colors={weatherOptions[condition].gradient}
 			style={styles.container}>

@@ -1,59 +1,37 @@
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import * as Location from 'expo-location';
-import Loading from "./Loading";
-import LoadingMap from "./LoadingMap";
-import {Alert} from "react-native-web";
+import * as React from 'react';
+import {Button, View, Text } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 
+import {useState, useEffect} from "react";
+import * as Location from "expo-location";
 import axios from "axios";
+import Loading from "./Loading";
 import Weather from "./Weather";
-
-//import PizzaTranslator from './PizzaTranslator'
-//import Battery from './Battery'
 import Map from "./Map";
 
 const API_KEY = '24751568ed46291e1768e5f7fbbd2508';
 
-export default class extends React.Component {
 
-  state = {
-    isLoading: true,
+function App() {
 
-  };
+  const [isLoading, setLoading] = useState(true);
+  const [temp, setTemp] = useState();
+  const [condition, setCondition] = useState();
 
-  getWeather = async (latitude, longitude) => {
-    const weather_api_url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`
-
-    const {data: {main: {temp}, weather}} = await axios.get(weather_api_url);
-    //const condition = 'Clear';
-    this.setState({
-      isLoading: false, temp: temp, condition: weather[0].main
-    })
-    //console.log(data)
-  }
-
-  getLocation = async () => {
-
+  const getLocation = async () => {
     try {
       //throw Error();
       //const response = await Location.getForegroundPermissionsAsync();
       const response = await Location.requestPermissionsAsync();
       if (response.status === "denied") {
-        ///Alert.alert('Не могу определить местоположение', 'Очень грустно :(');
-        //alert('Не могу определить местоположение', 'Очень грустно :(');
-
         console.log('Не могу определить местоположение')
       }
 
       const {coords: {latitude, longitude}} = await Location.getCurrentPositionAsync();
-
-      this.getWeather(latitude, longitude);
-
+      await getWeather(latitude, longitude);
       //const api_key = '1394c004909a73d450495a3a07e518ff';
-
       // TODO Сделать запрос к API
-
       console.log(latitude)
       console.log(longitude)
 
@@ -64,17 +42,85 @@ export default class extends React.Component {
 
   }
 
+  const getWeather = async (latitude, longitude) => {
+    const weather_api_url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`
+    const {data: {main: {temp}, weather}} = await axios.get(weather_api_url);
+    // this.setState({
+    //   isLoading: false, temp: temp, condition: weather[0].main
+    // })
 
-  componentDidMount() {
-    this.getLocation();
+    console.log('temp=', temp)
+    console.log('temp=', temp)
+    console.log('condition=/', weather[0].main)
+
+    setTemp(temp);
+    setCondition(weather[0].main);
+    setLoading(false);
+
   }
 
-  render () {
-    const {isLoading, temp, condition} = this.state;
-    return ( isLoading ? <LoadingMap />: <>
-      <Map />
-      </>
+
+  function WeatherScreen({ navigation }) {
+    return (       isLoading  ? <Loading /> :
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Text>Home Screen</Text>
+        <Button
+          title="Go to Maps"
+          onPress={() => navigation.navigate('Maps')}
+        />
+        <Button title="Go to More" onPress={() => navigation.navigate('More')} />
+
+        {console.log('log cond=', condition)}
+        <Weather temp={Math.round(temp)} condition={condition} />
+      </View>
+
     );
   }
+
+  function MapScreen({ navigation }) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Text>Details Screen</Text>
+        <Button
+          title="Go to Maps... again"
+          onPress={() => navigation.push('Details')}
+        />
+        <Button title="Go to Weather" onPress={() => navigation.navigate('Home')} />
+        <Button title="Go to More" onPress={() => navigation.navigate('More')} />
+        <Button title="Go back" onPress={() => navigation.goBack()} />
+
+        <Map />
+      </View>
+    );
+  }
+
+  function MoreScreen({navigation}) {
+    return (<View>
+      <Text>More text</Text>
+      <Button
+        title="Go to Maps"
+        onPress={() => navigation.push('Details')}
+      />
+      <Button title="Go to Weather" onPress={() => navigation.navigate('Home')} />
+      <Button title="Go back" onPress={() => navigation.goBack()} />
+    </View>)
+  }
+
+  const Stack = createStackNavigator();
+
+  useEffect(() => {
+    getLocation();
+  })
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Home">
+        <Stack.Screen name="Home" component={WeatherScreen} />
+        <Stack.Screen name="Maps" component={MapScreen} />
+        <Stack.Screen name="More" component={MoreScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 }
 
+export default App;
